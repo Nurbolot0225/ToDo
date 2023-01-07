@@ -28,6 +28,7 @@ function printTodo({id, userId, title, completed}) {
     const close = document.createElement('span')
     close.className = 'close'
     close.innerHTML = '&times;';
+    close.addEventListener('click', handleClose)
   
     li.prepend(status);
     li.append(close);
@@ -41,11 +42,18 @@ function createUserOption(user) {
 
     userSelect.append(option)
 }
-function handleTodoChange() {
+function handleClose() {
     const todoId = this.parentElement.dataset.id;
-    const completed = this.checked;
+    deleteTodo(todoId)
+}
+function removeTodo(todoId) {
+    todos = todos.filter(todo => todo.id !== todoId)
 
-    toggleTodoComplete(todoId, completed)
+    const todo = todoList.querySelector(`[data-id="${todoId}"]`) 
+    todo.querySelector('input').removeEventListener('change', handleTodoChange)
+    todo.querySelector('.close').removeEventListener('click', handleClose)
+
+    todo.remove()
 }
 
 // Event Logic
@@ -66,7 +74,13 @@ function handleSubmit(event) {
         title: form.todo.value,
         completed: false
     })
-};
+}
+function handleTodoChange() {
+    const todoId = this.parentElement.dataset.id;
+    const completed = this.checked;
+
+    toggleTodoComplete(todoId, completed)
+}
 
 // Async Logic
 async function getAllTodos() {
@@ -112,5 +126,21 @@ async function toggleTodoComplete(todoId, completed) {
 
     if (!response.ok) {
         // Error
+    }
+}
+
+async function deleteTodo(todoId) {
+    const response = await fetch(
+        `https://jsonplaceholder.typicode.com/todos/${todoId}`,
+        {
+            method: 'DELETE',
+            headers: {
+                'Content-Type' : 'application/json',
+            }
+        }
+    )
+
+    if (response.ok) {
+        removeTodo(todoId)
     }
 }
